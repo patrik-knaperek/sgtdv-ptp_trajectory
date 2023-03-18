@@ -11,7 +11,9 @@ int main (int argc, char** argv)
     ros::NodeHandle handle;
 
     ros::Publisher trajectoryPub = handle.advertise<sgtdv_msgs::Point2DArr>("pathplanning_trajectory", 1);
-    PTPtrajectory trajectoryObj(trajectoryPub);
+    ros::Publisher stopPub = handle.advertise<std_msgs::Empty>("stop",1);
+    ros::Publisher startPub = handle.advertise<std_msgs::Empty>("start",1);
+    PTPtrajectory trajectoryObj(trajectoryPub, stopPub, startPub);
 
     ros::Subscriber poseSub = handle.subscribe<sgtdv_msgs::CarPose>("pose_estimate", 1, &PTPtrajectory::PoseCallback, &trajectoryObj);
     
