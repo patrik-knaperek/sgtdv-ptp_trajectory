@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   sgtdv_msgs
   std_msgs
   std_srvs
+
   message_generation
 )
 
@@ -58,6 +59,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
+   GoRectangle.srv
    SetTarget.srv
  )
 
@@ -72,6 +74,7 @@ find_package(catkin REQUIRED COMPONENTS
  generate_messages(
    DEPENDENCIES
    std_msgs
+   sgtdv_msgs
  )
 
 ################################################
@@ -106,7 +109,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ptp_trajectory
-   CATKIN_DEPENDS roscpp sgtdv_msgs std_msgs std_srvs
+   CATKIN_DEPENDS message_runtime roscpp sgtdv_msgs std_msgs std_srvs
 #  DEPENDS system_lib
 )
 
@@ -144,7 +147,7 @@ include_directories(
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+  add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}

@@ -1,0 +1,5 @@
+float32 a
+float32 b
+int8 right
+---
+bool success

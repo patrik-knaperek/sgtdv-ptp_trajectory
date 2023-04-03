@@ -17,8 +17,9 @@ int main (int argc, char** argv)
 
     ros::Subscriber poseSub = handle.subscribe<sgtdv_msgs::CarPose>("pose_estimate", 1, &PTPtrajectory::PoseCallback, &trajectoryObj);
     
+    ros::ServiceServer rectangleSrv = handle.advertiseService("ptp_trajectory/go_rectangle", &PTPtrajectory::RectangleCallback, &trajectoryObj);
     ros::ServiceServer targetSrv = handle.advertiseService("ptp_trajectory/set_target", &PTPtrajectory::TargetCallback, &trajectoryObj);
-    trajectoryObj.SetSrvServer(targetSrv);
+    trajectoryObj.SetSrvServers(rectangleSrv, targetSrv);
 
 
     ros::spin();
