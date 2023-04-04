@@ -29,7 +29,7 @@ void PTPtrajectory::PoseCallback(const sgtdv_msgs::CarPose::ConstPtr &msg)
     }
 }
 
-bool PTPtrajectory::TargetCallback(const ptp_trajectory::SetTarget::Request& req, ptp_trajectory::SetTarget::Response& res)
+bool PTPtrajectory::TargetCallback(ptp_trajectory::SetTarget::Request& req, ptp_trajectory::SetTarget::Response& res)
 {
     m_target;
     m_target.x = req.x;
@@ -53,7 +53,7 @@ bool PTPtrajectory::TargetCallback(const ptp_trajectory::SetTarget::Request& req
             sgtdv_msgs::Point2D waypoint;
             waypoint.x = m_position.x + (i+1) * WAYPOINT_DISTANCE * cosinus;
             waypoint.y = m_position.y + (i+1) * WAYPOINT_DISTANCE * sinus;
-            waypoint.header.frame_id = "map";
+            //waypoint.header.frame_id = "map";
             waypoints.points.emplace_back(waypoint);
         }
     }

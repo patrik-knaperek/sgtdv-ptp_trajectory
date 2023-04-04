@@ -34,7 +34,7 @@ class PTPtrajectory
         }
 
         void PoseCallback(const sgtdv_msgs::CarPose::ConstPtr &msg);
-        bool TargetCallback(const ptp_trajectory::SetTarget::Request& req, ptp_trajectory::SetTarget::Response& res);
+        bool TargetCallback(ptp_trajectory::SetTarget::Request& req, ptp_trajectory::SetTarget::Response& res);
 
     private:
     sgtdv_msgs::Point2D m_target;
