@@ -23,8 +23,8 @@
 class PTPtrajectory
 {
     public:
-        static constexpr float WAYPOINT_DISTANCE = 0.1;
-        static constexpr float MIN_DISTANCE = 0.1;
+        static constexpr float WAYPOINT_DISTANCE = 0.5;
+        static constexpr float MIN_DISTANCE = 0.2;
 
     public:
         PTPtrajectory();
@@ -54,4 +54,5 @@ class PTPtrajectory
     ros::Publisher m_startPub;
     ros::ServiceServer m_rectangleSrv;
     ros::ServiceServer m_targetSrv;
+    bool m_moved = false;
 };

@@ -23,7 +23,13 @@ PTPtrajectory::PTPtrajectory(const ros::Publisher& trajectoryPub, const ros::Pub
 void PTPtrajectory::PoseCallback(const sgtdv_msgs::CarPose::ConstPtr &msg)
 {
     m_position = msg->position;
-    if (std::sqrt(std::pow(m_target.x - m_position.x, 2) + std::pow(m_target.y - m_position.y, 2)) < MIN_DISTANCE)
+
+    if (!m_moved)
+    {
+            if (std::sqrt(std::pow(m_target.x - m_position.x, 2) + std::pow(m_target.y - m_position.y, 2)) > 1.1 * MIN_DISTANCE)
+                m_moved = true;
+    }
+    else if (std::sqrt(std::pow(m_target.x - m_position.x, 2) + std::pow(m_target.y - m_position.y, 2)) < MIN_DISTANCE)
     {
         m_stopPub.publish(std_msgs::Empty());
         m_trajectory.points.clear();
@@ -54,16 +60,17 @@ bool PTPtrajectory::RectangleCallback(ptp_trajectory::GoRectangle::Request& req,
     target2.x = m_position.x - MIN_DISTANCE;
     UpdateTrajectory(ComputeWaypoints(target1, target2));
     m_target = target2;
-    m_target.header.frame_id = "map";
+//    m_target.header.frame_id = "map";
 
     PublishTrajectory();
+    m_moved = false;
     return (res.success = m_trajectory.points.size() > 0);
 }
 
 bool PTPtrajectory::TargetCallback(ptp_trajectory::SetTarget::Request& req, ptp_trajectory::SetTarget::Response& res)
 {
     m_target = req.coords;
-    m_target.header.frame_id = "map";
+//    m_target.header.frame_id = "map";
 
     UpdateTrajectory(ComputeWaypoints(m_position, m_target));
     PublishTrajectory();
@@ -92,7 +99,7 @@ const sgtdv_msgs::Point2DArr::Ptr PTPtrajectory::ComputeWaypoints(const sgtdv_ms
             sgtdv_msgs::Point2D waypoint;
             waypoint.x = start.x + (i+1) * WAYPOINT_DISTANCE * cosinus;
             waypoint.y = start.y + (i+1) * WAYPOINT_DISTANCE * sinus;
-            waypoint.header.frame_id = "map";
+//            waypoint.header.frame_id = "map";
             waypoints->points.emplace_back(waypoint);
         }
     }
