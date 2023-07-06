@@ -26,7 +26,7 @@ void PTPtrajectory::PoseCallback(const sgtdv_msgs::CarPose::ConstPtr &msg)
 
     if (!m_moved)
     {
-            if (std::sqrt(std::pow(m_target.x - m_position.x, 2) + std::pow(m_target.y - m_position.y, 2)) > 1.1 * MIN_DISTANCE)
+            if (std::sqrt(std::pow(m_target.x - m_position.x, 2) + std::pow(m_target.y - m_position.y, 2)) > 4.0 * MIN_DISTANCE)
                 m_moved = true;
     }
     else if (std::sqrt(std::pow(m_target.x - m_position.x, 2) + std::pow(m_target.y - m_position.y, 2)) < MIN_DISTANCE)
