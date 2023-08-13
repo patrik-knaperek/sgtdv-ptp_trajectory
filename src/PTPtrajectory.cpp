@@ -9,10 +9,8 @@ PTPtrajectory::PTPtrajectory()
 {
 }
 
-PTPtrajectory::PTPtrajectory(const ros::Publisher& trajectoryPub, const ros::Publisher& stopPub, const ros::Publisher& startPub) :
-    m_trajectoryPub(trajectoryPub)
-    , m_stopPub(stopPub)
-    , m_startPub(startPub)
+PTPtrajectory::PTPtrajectory(const ros::Publisher& trajectoryPub) 
+: m_trajectoryPub(trajectoryPub)
 {
     m_target.x = 0.0;
     m_target.y = 0.0;
@@ -31,7 +29,10 @@ void PTPtrajectory::PoseCallback(const sgtdv_msgs::CarPose::ConstPtr &msg)
     }
     else if (std::sqrt(std::pow(m_target.x - m_position.x, 2) + std::pow(m_target.y - m_position.y, 2)) < MIN_DISTANCE)
     {
-        m_stopPub.publish(std_msgs::Empty());
+        if (!ros::service::call("pathTracking/stop", m_srvMsg))
+	    {
+		    ROS_ERROR("Service \"pathTracking/stop\" failed");
+	    }
         m_trajectory.points.clear();
     }
 }
@@ -121,8 +122,12 @@ void PTPtrajectory::UpdateTrajectory(const sgtdv_msgs::Point2DArr::ConstPtr &way
     }
 }
 
-void PTPtrajectory::PublishTrajectory() const
+void PTPtrajectory::PublishTrajectory()
 {
     m_trajectoryPub.publish(m_trajectory);
-    m_startPub.publish(std_msgs::Empty());
+    
+    if (!ros::service::call("pathTracking/start", m_srvMsg))
+    {
+        ROS_ERROR("Service \"pathTracking/start\" failed");
+    }
 }
