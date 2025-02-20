@@ -12,7 +12,6 @@
 
 /* ROS */
 #include <ros/ros.h>
-#include <std_msgs/Empty.h>
 #include <std_srvs/Empty.h>
 
 /* SGT */
@@ -50,4 +49,5 @@ private:
   sgtdv_msgs::Point2D position_;
   std_srvs::Empty srv_msg_;
   bool moved_ = false;
+  bool track_loop_;
 };

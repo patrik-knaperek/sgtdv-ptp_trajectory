@@ -3,7 +3,11 @@
 /* Authors: Patrik Knaperek
 /*****************************************************/
 
-#include "../include/ptp_trajectory.h"
+/* SGT-DV */
+#include <SGT_Utils.h>
+
+/* Header */
+#include "ptp_trajectory.h"
 
 PTPtrajectory::PTPtrajectory(ros::NodeHandle& nh) :
    /* ROS interface init */
@@ -14,6 +18,7 @@ PTPtrajectory::PTPtrajectory(ros::NodeHandle& nh) :
   rectangle_srv_(nh.advertiseService("ptp_trajectory/go_rectangle", &PTPtrajectory::rectangleCallback, this)),
   target_srv_(nh.advertiseService("ptp_trajectory/set_target", &PTPtrajectory::targetCallback, this))
 {
+  Utils::loadParam(nh, "/track_loop", false, &track_loop_);
 }
 
 void PTPtrajectory::poseCallback(const sgtdv_msgs::CarPose::ConstPtr &msg)
@@ -26,7 +31,7 @@ void PTPtrajectory::poseCallback(const sgtdv_msgs::CarPose::ConstPtr &msg)
     if(target_dist > 4.0 * MIN_DISTANCE)
         moved_ = true;
   }
-  else if(target_dist < MIN_DISTANCE)
+  else if(target_dist < MIN_DISTANCE && !track_loop_)
   {
     if(!ros::service::call("path_tracking/stop", srv_msg_))
     {
@@ -38,6 +43,8 @@ void PTPtrajectory::poseCallback(const sgtdv_msgs::CarPose::ConstPtr &msg)
 
 bool PTPtrajectory::rectangleCallback(ptp_trajectory::GoRectangle::Request& req, ptp_trajectory::GoRectangle::Response& res)
 {
+  trajectory_.points.clear();
+  
   sgtdv_msgs::Point2D target1;
   target1.x = position_.x + req.a / 2.;
   target1.y = position_.y;
@@ -68,6 +75,8 @@ bool PTPtrajectory::rectangleCallback(ptp_trajectory::GoRectangle::Request& req,
 
 bool PTPtrajectory::targetCallback(ptp_trajectory::SetTarget::Request& req, ptp_trajectory::SetTarget::Response& res)
 {
+  trajectory_.points.clear();
+
   target_ = req.coords;
 
   updateTrajectory(computeWaypoints(position_, target_));

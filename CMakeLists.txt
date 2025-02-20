@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
+find_package(Eigen3 REQUIRED)
+
 ################################################
 ## Declare ROS messages, services and actions ##
 ################################################
@@ -41,7 +43,10 @@ catkin_package(
 ###########
 
 include_directories(
+  include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}/../
 )
 
  add_executable(${PROJECT_NAME} src/ptp_trajectory_node.cpp src/ptp_trajectory.cpp)
