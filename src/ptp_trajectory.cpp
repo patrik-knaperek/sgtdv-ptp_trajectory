@@ -11,12 +11,13 @@
 
 PTPtrajectory::PTPtrajectory(ros::NodeHandle& nh) :
    /* ROS interface init */
-  trajectory_pub_(nh.advertise<sgtdv_msgs::Point2DArr>("path_planning/trajectory", 1)),
+  trajectory_pub_(nh.advertise<sgtdv_msgs::Trajectory>("path_planning/trajectory", 1, true)),
   
   pose_sub_(nh.subscribe<sgtdv_msgs::CarPose>("odometry/pose", 1, &PTPtrajectory::poseCallback, this)),
   
   rectangle_srv_(nh.advertiseService("ptp_trajectory/go_rectangle", &PTPtrajectory::rectangleCallback, this)),
-  target_srv_(nh.advertiseService("ptp_trajectory/set_target", &PTPtrajectory::targetCallback, this))
+  target_srv_(nh.advertiseService("ptp_trajectory/set_target", &PTPtrajectory::targetCallback, this)),
+  set_speed_server_(nh.advertiseService("path_planning/set_speed", &PTPtrajectory::setSpeedCallback, this))
 {
   Utils::loadParam(nh, "/track_loop", false, &track_loop_);
 }
@@ -37,13 +38,15 @@ void PTPtrajectory::poseCallback(const sgtdv_msgs::CarPose::ConstPtr &msg)
     {
       ROS_ERROR("Service \"path_tracking/stop\" failed");
     }
-    trajectory_.points.clear();
+    trajectory_.path.points.clear();
+    trajectory_.ref_speed.clear();
   }
 }
 
 bool PTPtrajectory::rectangleCallback(ptp_trajectory::GoRectangle::Request& req, ptp_trajectory::GoRectangle::Response& res)
 {
-  trajectory_.points.clear();
+  trajectory_.path.points.clear();
+  trajectory_.ref_speed.clear();
   
   sgtdv_msgs::Point2D target1;
   target1.x = position_.x + req.a / 2.;
@@ -70,27 +73,34 @@ bool PTPtrajectory::rectangleCallback(ptp_trajectory::GoRectangle::Request& req,
 
   publishTrajectory();
   moved_ = false;
-  return (res.success = trajectory_.points.size() > 0);
+  return (res.success = trajectory_.path.points.size() > 0);
 }
 
 bool PTPtrajectory::targetCallback(ptp_trajectory::SetTarget::Request& req, ptp_trajectory::SetTarget::Response& res)
 {
-  trajectory_.points.clear();
+  trajectory_.path.points.clear();
+  trajectory_.ref_speed.clear();
 
   target_ = req.coords;
 
   updateTrajectory(computeWaypoints(position_, target_));
   publishTrajectory();
 
-  return (res.success = trajectory_.points.size() > 0);
+  return (res.success = trajectory_.path.points.size() > 0);
 }
 
-const sgtdv_msgs::Point2DArr::Ptr PTPtrajectory::computeWaypoints(const sgtdv_msgs::Point2D &start, const sgtdv_msgs::Point2D &target) const
+bool PTPtrajectory::setSpeedCallback(sgtdv_msgs::Float32Srv::Request &req, sgtdv_msgs::Float32Srv::Response &res)
 {
-  const auto target_distance = static_cast<float>(
-    std::sqrt(
-      std::pow(start.x - target.x,2) + std::pow(start.y - target.y,2)
-    ));
+  ref_speed_ = req.data;
+
+  ROS_INFO_STREAM("Setting reference speed manually: " << ref_speed_);
+  return true;
+}
+
+const sgtdv_msgs::Point2DArr::Ptr 
+PTPtrajectory::computeWaypoints(const sgtdv_msgs::Point2D &start, const sgtdv_msgs::Point2D &target) const
+{
+  const auto target_distance = static_cast<float>(std::hypot(start.x - target.x, start.y - target.y));
   
   const auto heading_to_target = std::atan2((target.y - start.y),
                                           (target.x - start.x));
@@ -122,10 +132,13 @@ const sgtdv_msgs::Point2DArr::Ptr PTPtrajectory::computeWaypoints(const sgtdv_ms
 
 void PTPtrajectory::updateTrajectory(const sgtdv_msgs::Point2DArr::ConstPtr &waypoints)
 {
-  trajectory_.points.reserve(trajectory_.points.size() + waypoints->points.size());
+  trajectory_.path.points.reserve(trajectory_.path.points.size() + waypoints->points.size());
+  trajectory_.ref_speed.reserve(trajectory_.path.points.size() + waypoints->points.size());
+
   for(const auto &i : waypoints->points)
   {
-    trajectory_.points.emplace_back(i);
+    trajectory_.path.points.emplace_back(i);
+    trajectory_.ref_speed.push_back(ref_speed_);
   }
 }
 
